@@ -29,7 +29,7 @@ def initialise():
     return data
 
 def get_candidates(table):
-    nt = (Time.now().jd+1/24)+6
+    nt = (Time.now().jd+1/24)+0
     base_idx = np.sum(table['time'] < nt) - 1
     
     candidates = {
