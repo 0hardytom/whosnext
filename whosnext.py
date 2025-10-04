@@ -148,7 +148,7 @@ def generate_html(candidates):
         <style>
             :root {{
                 --bg-color: #f4f7f9;
-                --card-bg: #ffffff;
+                --card-bg: rgba(255, 255, 255, 0.85);
                 --primary-text: #2c3e50;
                 --secondary-text: #7f8c8d;
                 --accent-color: #3498db;
@@ -158,7 +158,10 @@ def generate_html(candidates):
             body {{
                 font-family: 'Roboto', sans-serif;
                 margin: 0;
-                background-color: var(--bg-color);
+                background-image: url('img/bkg.jpg');
+                background-size: cover;
+                background-position: center;
+                background-attachment: fixed;
                 color: var(--primary-text);
                 padding-bottom: 120px; /* Space for the queue footer */
             }}
@@ -174,6 +177,7 @@ def generate_html(candidates):
             .card {{
                 flex: 1;
                 background-color: var(--card-bg);
+                backdrop-filter: blur(10px);
                 border-radius: 12px;
                 box-shadow: var(--shadow);
                 padding: 30px;
@@ -248,16 +252,17 @@ def generate_html(candidates):
                 bottom: 0;
                 left: 0;
                 width: 100%;
-                background-color: var(--card-bg);
+                background-color: rgba(255, 255, 255, 0.5);
+                backdrop-filter: blur(20px);
                 box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
                 padding: 15px 40px;
                 box-sizing: border-box;
-                border-top: 1px solid var(--border-color);
+                border-top: 1px solid rgba(255, 255, 255, 0.2);
             }}
             .queue-header {{
                 text-align: center;
                 font-weight: 500;
-                color: var(--secondary-text);
+                color: var(--primary-text);
                 margin: 0 0 10px 0;
                 font-size: 1.1em;
             }}
@@ -269,9 +274,11 @@ def generate_html(candidates):
             .queue-item .name {{
                 font-size: 1.1em;
                 font-weight: 500;
+                color: var(--primary-text);
             }}
             .queue-item .instrument {{
                 font-size: 0.9em;
+                color: var(--primary-text);
             }}
         </style>
     </head>
@@ -291,20 +298,27 @@ def generate_html(candidates):
     return html
 
 if __name__ == '__main__':
+    # Change to the script's directory to ensure relative paths for assets work correctly
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    
     PORT = 8000
     table = initialise()
 
     class MyHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
         def do_GET(self):
-            self.send_response(200)
-            self.send_header("Content-type", "text/html")
-            self.end_headers()
-            
-            candidates = get_candidates(table)
-            html = generate_html(candidates)
-            
-            self.wfile.write(bytes(html, "utf8"))
-            return
+            if self.path == '/':
+                self.send_response(200)
+                self.send_header("Content-type", "text/html")
+                self.end_headers()
+                
+                candidates = get_candidates(table)
+                html = generate_html(candidates)
+                
+                self.wfile.write(bytes(html, "utf8"))
+                return
+            else:
+                # Serve other files like images using the default handler
+                return http.server.SimpleHTTPRequestHandler.do_GET(self)
 
     Handler = MyHttpRequestHandler
     with socketserver.TCPServer(("localhost", PORT), Handler) as httpd:
